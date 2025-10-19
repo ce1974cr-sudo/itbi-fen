@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import {
   BarChart,
@@ -9,6 +9,9 @@ import {
   Legend,
   CartesianGrid,
 } from "recharts";
+
+// Usa variável de ambiente para a URL do backend
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://itbi-bke.onrender.com';
 
 function App() {
   const [sqlPrefix, setSqlPrefix] = useState("");
@@ -23,14 +26,14 @@ function App() {
     setLoading(true);
     try {
       const response = await axios.get(
-        `https://itbi-bke.onrender.com/transacoes/${sqlPrefix}`,
+        `${API_BASE_URL}/transacoes/${sqlPrefix}`,
         {
           params: numero ? { numero } : {},
         }
       );
-      const data = response.data.transacoes || []; // Garante array vazio se undefined
+      const data = response.data.transacoes || [];
       setTransacoes(data);
-      setSelectedTransacoes(data.map((t) => t.sql)); // Usa chave 'sql' (lowercase)
+      setSelectedTransacoes(data.map((t) => t.sql));
       console.log("✅ Resposta backend:", response.data);
     } catch (error) {
       console.error("Erro ao buscar transações:", error);
@@ -50,12 +53,12 @@ function App() {
   };
 
   const filteredTransacoes = transacoes.filter((t) =>
-    selectedTransacoes.includes(t.sql) // Usa chave 'sql'
+    selectedTransacoes.includes(t.sql)
   );
 
   // Ordena as transações pela data (mais antiga à esquerda)
   const sortedTransacoes = [...filteredTransacoes].sort(
-    (a, b) => new Date(a.data_transacao) - new Date(b.data_transacao) // Usa 'data_transacao'
+    (a, b) => new Date(a.data_transacao) - new Date(b.data_transacao)
   );
 
   return (
@@ -87,7 +90,7 @@ function App() {
 
       {loading && <p>Carregando transações...</p>}
 
-      {transacoes.length > 0 && (
+      {transacoes.length > 0 ? (
         <>
           <h2 className="text-xl font-bold mt-6 mb-2">Gráfico de Transações</h2>
 
@@ -96,8 +99,8 @@ function App() {
               <label key={t.sql} className="mr-4">
                 <input
                   type="checkbox"
-                  checked={selectedTransacoes.includes(t.sql)} // Usa 'sql'
-                  onChange={() => toggleTransaction(t.sql)} // Usa 'sql'
+                  checked={selectedTransacoes.includes(t.sql)}
+                  onChange={() => toggleTransaction(t.sql)}
                 />
                 {` ${t.sql}`}
               </label>
@@ -110,4 +113,71 @@ function App() {
             data={sortedTransacoes}
             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3"
+            <CartesianGrid strokeDasharray="3 3" /> {/* Tag corrigida */}
+            <XAxis
+              dataKey="data_transacao"
+              tickFormatter={(tick) =>
+                new Date(tick).toLocaleDateString("pt-BR")
+              }
+            />
+            <YAxis />
+            <Tooltip
+              formatter={(value) =>
+                value.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })
+              }
+            />
+            <Legend />
+            <Bar
+              dataKey="valor_transacao"
+              fill="#7e57c2"
+              name="Valor da transação"
+            />
+          </BarChart>
+
+          <h2 className="text-xl font-bold mt-6 mb-2">Lista de Transações</h2>
+
+          <table className="table-auto border-collapse border border-gray-400 w-full">
+            <thead>
+              <tr>
+                <th className="border p-2">SQL</th>
+                <th className="border p-2">Logradouro</th>
+                <th className="border p-2">Número</th>
+                <th className="border p-2">Complemento</th>
+                <th className="border p-2">Valor</th>
+                <th className="border p-2">Data</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedTransacoes.map((t, index) => (
+                <tr key={index}>
+                  <td className="border p-2">{t.sql}</td>
+                  <td className="border p-2">{t.logradouro}</td>
+                  <td className="border p-2">{t.numero}</td>
+                  <td className="border p-2">{t.complemento || 'N/A'}</td>
+                  <td className="border p-2">
+                    {t.valor_transacao?.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    }) || 'N/A'}
+                  </td>
+                  <td className="border p-2">
+                    {t.data_transacao
+                      ? new Date(t.data_transacao).toLocaleDateString("pt-BR")
+                      : 'N/A'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      ) : (
+        <p>Nenhuma transação encontrada.</p>
+      )}
+    </div>
+  );
+}
+
+export default App;
