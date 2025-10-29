@@ -2,15 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Regras customizadas para remover checkboxes */
+/* Oculta checkboxes e seus labels/textos associados (seção acima do gráfico) */
 input[type="checkbox"] {
     display: none !important;
 }
 
-table input[type="checkbox"] {
-    display: none !important;
+label:has(input[type="checkbox"]) {
+    display: none !important;  /* Remove o label inteiro, incluindo o texto SQL */
 }
 
-table label:has(input[type="checkbox"]) {
-    display: none;
+/* Se o wrapper div da seção inteira tiver uma classe (ex: .mb-4), use: */
+div.mb-4:has(input[type="checkbox"]) {
+    display: none !important;
 }
