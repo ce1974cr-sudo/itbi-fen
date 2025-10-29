@@ -2,3 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Regras customizadas para remover checkboxes */
+input[type="checkbox"] {
+    display: none !important;
+}
+
+table input[type="checkbox"] {
+    display: none !important;
+}
+
+table label:has(input[type="checkbox"]) {
+    display: none;
+}
